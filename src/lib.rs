@@ -4,8 +4,9 @@
 // Disable clippy and `u128` not being FFI-safe (see #1)
 #![allow(clippy::all)]
 #![allow(improper_ctypes)]
-
-#[allow(clippy::all)]
+// https://github.com/rust-lang/rust-bindgen/issues/1651
+#![allow(deref_nullptr)]
+#![warn(rust_2018_idioms)]
 
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/generated/bindings.rs"));
 
