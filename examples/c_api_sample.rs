@@ -339,7 +339,7 @@ fn main() {
 }
 
 fn CheckStatus(g_ort: *const OrtApi, status: *const OrtStatus) -> Result<(), String> {
-    if status != std::ptr::null() {
+    if !status.is_null() {
         let raw = unsafe { g_ort.as_ref().unwrap().GetErrorMessage.unwrap()(status) };
         Err(char_p_to_str(raw).unwrap().to_string())
     } else {
