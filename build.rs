@@ -68,14 +68,7 @@ fn generate_bindings(_include_dir: &Path) {
 fn generate_bindings(include_dir: &Path) {
     let clang_args = &[
         format!("-I{}", include_dir.display()),
-        format!(
-            "-I{}",
-            include_dir
-                .join("onnxruntime")
-                .join("core")
-                .join("session")
-                .display()
-        ),
+        format!("-I{}", include_dir.join("onnxruntime").join("core").join("session").display()),
     ];
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
@@ -112,9 +105,7 @@ fn generate_bindings(include_dir: &Path) {
         .join(env::var("CARGO_CFG_TARGET_ARCH").unwrap())
         .join("bindings.rs");
     println!("cargo:rerun-if-changed={:?}", generated_file);
-    bindings
-        .write_to_file(&generated_file)
-        .expect("Couldn't write bindings!");
+    bindings.write_to_file(&generated_file).expect("Couldn't write bindings!");
 }
 
 fn download<P>(source_url: &str, target_file: P)
@@ -126,10 +117,7 @@ where
         .call()
         .unwrap_or_else(|err| panic!("ERROR: Failed to download {}: {:?}", source_url, err));
 
-    let len = resp
-        .header("Content-Length")
-        .and_then(|s| s.parse::<usize>().ok())
-        .unwrap();
+    let len = resp.header("Content-Length").and_then(|s| s.parse::<usize>().ok()).unwrap();
     let mut reader = resp.into_reader();
     // FIXME: Save directly to the file
     let mut buffer = vec![];
@@ -210,10 +198,7 @@ fn prebuilt_archive_url() -> (PathBuf, String) {
     };
 
     if arch.as_str() == "x86" && os.as_str() != "windows" {
-        panic!(
-            "ONNX Runtime only supports x86 (i686) architecture on Windows (not {:?}).",
-            os
-        );
+        panic!("ONNX Runtime only supports x86 (i686) architecture on Windows (not {:?}).", os);
     }
 
     // Only Windows and Linux x64 support GPU
@@ -236,10 +221,7 @@ fn prebuilt_archive_url() -> (PathBuf, String) {
         "onnxruntime-{}-{}{}-{}.{}",
         os_str, arch_str, gpu_str, ORT_VERSION, archive_extension
     );
-    let prebuilt_url = format!(
-        "{}/v{}/{}",
-        ORT_RELEASE_BASE_URL, ORT_VERSION, prebuilt_archive
-    );
+    let prebuilt_url = format!("{}/v{}/{}", ORT_RELEASE_BASE_URL, ORT_VERSION, prebuilt_archive);
 
     (PathBuf::from(prebuilt_archive), prebuilt_url)
 }
@@ -255,11 +237,7 @@ fn prepare_libort_dir_prebuilt() -> PathBuf {
         println!("Creating directory {:?}", out_dir);
         fs::create_dir_all(&out_dir).unwrap();
 
-        println!(
-            "Downloading {} into {}",
-            prebuilt_url,
-            downloaded_file.display()
-        );
+        println!("Downloading {} into {}", prebuilt_url, downloaded_file.display());
         download(&prebuilt_url, &downloaded_file);
     }
 
@@ -273,13 +251,7 @@ fn prepare_libort_dir_prebuilt() -> PathBuf {
 
 fn prepare_libort_dir() -> PathBuf {
     let strategy = env::var(ORT_ENV_STRATEGY);
-    println!(
-        "strategy: {:?}",
-        strategy
-            .as_ref()
-            .map(String::as_str)
-            .unwrap_or_else(|_| "unknown")
-    );
+    println!("strategy: {:?}", strategy.as_ref().map(String::as_str).unwrap_or_else(|_| "unknown"));
     match strategy.as_ref().map(String::as_str) {
         Ok("download") | Err(_) => prepare_libort_dir_prebuilt(),
         Ok("system") => PathBuf::from(match env::var(ORT_ENV_SYSTEM_LIB_LOCATION) {

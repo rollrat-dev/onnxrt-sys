@@ -38,11 +38,7 @@ fn main() {
 
     // Sets graph optimization level
     unsafe {
-        g_ort
-            .as_ref()
-            .unwrap()
-            .SetSessionGraphOptimizationLevel
-            .unwrap()(
+        g_ort.as_ref().unwrap().SetSessionGraphOptimizationLevel.unwrap()(
             session_options_ptr,
             GraphOptimizationLevel::ORT_ENABLE_BASIC,
         )
@@ -93,11 +89,7 @@ fn main() {
     // size_t num_input_nodes;
     let mut allocator_ptr: *mut OrtAllocator = std::ptr::null_mut();
     let status = unsafe {
-        g_ort
-            .as_ref()
-            .unwrap()
-            .GetAllocatorWithDefaultOptions
-            .unwrap()(&mut allocator_ptr)
+        g_ort.as_ref().unwrap().GetAllocatorWithDefaultOptions.unwrap()(&mut allocator_ptr)
     };
     CheckStatus(g_ort, status).unwrap();
     assert_ne!(allocator_ptr, std::ptr::null_mut());
@@ -164,10 +156,7 @@ fn main() {
             g_ort.as_ref().unwrap().GetTensorElementType.unwrap()(tensor_info_ptr, &mut type_)
         };
         CheckStatus(g_ort, status).unwrap();
-        assert_ne!(
-            type_,
-            ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED
-        );
+        assert_ne!(type_, ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED);
 
         println!("Input {} : type={}", i, type_ as i32);
 
@@ -221,9 +210,8 @@ fn main() {
     let output_node_names = &["softmaxout_1"];
 
     // initialize input data with values in [0.0, 1.0]
-    let mut input_tensor_values: Vec<f32> = (0..input_tensor_size)
-        .map(|i| (i as f32) / ((input_tensor_size + 1) as f32))
-        .collect();
+    let mut input_tensor_values: Vec<f32> =
+        (0..input_tensor_size).map(|i| (i as f32) / ((input_tensor_size + 1) as f32)).collect();
 
     // create input tensor object from data values
     let mut memory_info_ptr: *mut OrtMemoryInfo = std::ptr::null_mut();
@@ -248,11 +236,7 @@ fn main() {
     assert_ne!(shape, std::ptr::null_mut());
 
     let status = unsafe {
-        g_ort
-            .as_ref()
-            .unwrap()
-            .CreateTensorWithDataAsOrtValue
-            .unwrap()(
+        g_ort.as_ref().unwrap().CreateTensorWithDataAsOrtValue.unwrap()(
             memory_info_ptr,
             input_tensor_values_ptr,
             input_tensor_size * std::mem::size_of::<f32>(),
@@ -278,24 +262,16 @@ fn main() {
 
     // score model & input tensor, get back output tensor
 
-    let input_node_names_cstring: Vec<std::ffi::CString> = input_node_names
-        .into_iter()
-        .map(|n| std::ffi::CString::new(n).unwrap())
-        .collect();
-    let input_node_names_ptr: Vec<*const i8> = input_node_names_cstring
-        .into_iter()
-        .map(|n| n.into_raw() as *const i8)
-        .collect();
+    let input_node_names_cstring: Vec<std::ffi::CString> =
+        input_node_names.into_iter().map(|n| std::ffi::CString::new(n).unwrap()).collect();
+    let input_node_names_ptr: Vec<*const i8> =
+        input_node_names_cstring.into_iter().map(|n| n.into_raw() as *const i8).collect();
     let input_node_names_ptr_ptr: *const *const i8 = input_node_names_ptr.as_ptr();
 
-    let output_node_names_cstring: Vec<std::ffi::CString> = output_node_names
-        .into_iter()
-        .map(|n| std::ffi::CString::new(n.clone()).unwrap())
-        .collect();
-    let output_node_names_ptr: Vec<*const i8> = output_node_names_cstring
-        .iter()
-        .map(|n| n.as_ptr() as *const i8)
-        .collect();
+    let output_node_names_cstring: Vec<std::ffi::CString> =
+        output_node_names.into_iter().map(|n| std::ffi::CString::new(n.clone()).unwrap()).collect();
+    let output_node_names_ptr: Vec<*const i8> =
+        output_node_names_cstring.iter().map(|n| n.as_ptr() as *const i8).collect();
     let output_node_names_ptr_ptr: *const *const i8 = output_node_names_ptr.as_ptr();
 
     let _input_node_names_cstring =
