@@ -10,7 +10,7 @@ use std::{
 ///
 /// WARNING: If version is changed, bindings for all platforms will have to be re-generated.
 ///          To do so, run this:
-///              cargo build --package onnxruntime-sys --features generate-bindings
+///              cargo build --features generate-bindings
 const ORT_VERSION: &str = "1.7.0";
 
 /// Base Url from which to download pre-built releases/
@@ -32,12 +32,6 @@ const ORT_ENV_GPU: &str = "ORT_USE_CUDA";
 /// Subdirectory (of the 'target' directory) into which to extract the prebuilt library.
 const ORT_PREBUILT_EXTRACT_DIR: &str = "onnxruntime";
 
-#[cfg(feature = "disable-sys-build-script")]
-fn main() {
-    println!("Build script disabled!");
-}
-
-#[cfg(not(feature = "disable-sys-build-script"))]
 fn main() {
     let libort_install_dir = prepare_libort_dir();
 
@@ -132,12 +126,15 @@ where
 
 fn extract_archive(filename: &Path, output: &Path) {
     match filename.extension().map(|e| e.to_str()) {
+        #[cfg(windows)]
         Some(Some("zip")) => extract_zip(filename, output),
+        #[cfg(unix)]
         Some(Some("tgz")) => extract_tgz(filename, output),
         _ => unimplemented!(),
     }
 }
 
+#[cfg(unix)]
 fn extract_tgz(filename: &Path, output: &Path) {
     let file = fs::File::open(&filename).unwrap();
     let buf = io::BufReader::new(file);
@@ -146,6 +143,7 @@ fn extract_tgz(filename: &Path, output: &Path) {
     archive.unpack(output).unwrap();
 }
 
+#[cfg(windows)]
 fn extract_zip(filename: &Path, outpath: &Path) {
     let file = fs::File::open(&filename).unwrap();
     let buf = io::BufReader::new(file);

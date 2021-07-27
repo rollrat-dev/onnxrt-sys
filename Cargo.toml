@@ -1,41 +1,28 @@
 [package]
-authors = ["Nicolas Bigaouette <nbigaouette@elementai.com>"]
-edition = "2018"
-name = "onnxruntime-sys"
-version = "0.0.12"
-
-description = "Unsafe wrapper around Microsoft's ONNX Runtime"
-documentation = "https://docs.rs/onnxruntime-sys"
-homepage = "https://github.com/nbigaouette/onnxruntime-rs"
+name = "onnxrt-sys"
+version = "0.1.0"
+authors = ["FuriosaAI Inc."]
+description = "OnnxRt-sys provides low-level Rust bindings to the C API for Microsoft's ONNX Runtime."
 license = "MIT OR Apache-2.0"
-readme = "../README.md"
-repository = "https://github.com/nbigaouette/onnxruntime-rs"
-
-categories = ["science"]
-keywords = ["neuralnetworks", "onnx", "bindings"]
-
-[dependencies]
-
-[build-dependencies]
-bindgen = { version = "0.59.1", optional = true }
-ureq = "2.1"
-
-# Used on Windows
-zip = "0.5"
-
-# Used on unix
-flate2 = "1.0"
-tar = "0.4"
+readme = "README.md"
+repository = "https://github.com/furiosa-ai/onnxrt-sys"
+keywords = ["onnx", "neuralnetworks", "ffi", "bindings"]
+categories = ["science", "external-ffi-bindings"]
+documentation = "https://furiosa-ai.github.io/onnxrt-sys/0.1.0/onnxrt-sys"
+edition = "2018"
 
 [features]
 default = []
-
-# Disable build script, used to prevent issues with docs.rs
-disable-sys-build-script = []
 # Use bindgen to generate bindings in build.rs
 generate-bindings = ["bindgen"]
 
-[package.metadata.docs.rs]
-# Disable the build.rs on https://docs.rs since it can cause
-# issue there and it's not needed.
-features = ["disable-sys-build-script"]
+[build-dependencies]
+bindgen = { version = "0.59.1", optional = true }
+ureq = "2.1.1"
+
+[target.'cfg(unix)'.build-dependencies]
+flate2 = "1.0.20"
+tar = "0.4.35"
+
+[target.'cfg(windows)'.build-dependencies]
+zip = "0.5.13"
