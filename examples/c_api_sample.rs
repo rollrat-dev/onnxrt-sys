@@ -263,9 +263,9 @@ fn main() {
     // score model & input tensor, get back output tensor
 
     let input_node_names_cstring: Vec<std::ffi::CString> =
-        input_node_names.into_iter().map(|n| std::ffi::CString::new(n).unwrap()).collect();
+        input_node_names.iter().map(|&n| std::ffi::CString::new(n).unwrap()).collect();
     let input_node_names_ptr: Vec<*const i8> =
-        input_node_names_cstring.into_iter().map(|n| n.into_raw() as *const i8).collect();
+        input_node_names_cstring.iter().map(|n| n.as_ptr() as *const i8).collect();
     let input_node_names_ptr_ptr: *const *const i8 = input_node_names_ptr.as_ptr();
 
     let output_node_names_cstring: Vec<std::ffi::CString> =
@@ -274,8 +274,6 @@ fn main() {
         output_node_names_cstring.iter().map(|n| n.as_ptr() as *const i8).collect();
     let output_node_names_ptr_ptr: *const *const i8 = output_node_names_ptr.as_ptr();
 
-    let _input_node_names_cstring =
-        unsafe { std::ffi::CString::from_raw(input_node_names_ptr[0] as *mut i8) };
     let run_options_ptr: *const OrtRunOptions = std::ptr::null();
     let mut output_tensor_ptr: *mut OrtValue = std::ptr::null_mut();
     let output_tensor_ptr_ptr: *mut *mut OrtValue = &mut output_tensor_ptr;
