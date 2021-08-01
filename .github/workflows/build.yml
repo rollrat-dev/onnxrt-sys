@@ -12,55 +12,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  cargo-test-ubuntu:
-    name: cargo test (Ubuntu)
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-    - name: cargo test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose --workspace --all-targets -- -Z unstable-options --include-ignored
-    # `cargo test --all-targets` does not run doctests: https://github.com/rust-lang/cargo/issues/6669.
-    - name: cargo test (doc)
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose --workspace --doc
-
-  cargo-test-macos:
-    name: cargo test (macOS)
-    runs-on: macOS-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-    - name: cargo test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose --workspace --all-targets -- -Z unstable-options --include-ignored
-    # `cargo test --all-targets` does not run doctests: https://github.com/rust-lang/cargo/issues/6669.
-    - name: cargo test (doc)
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose --workspace --doc
-
-  cargo-test-windows:
-    name: cargo test (Windows)
-    runs-on: windows-latest
+  cargo-test:
+    name: cargo test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Install Rust
