@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://furiosa-ai.github.io/onnxrt-sys/0.3.0/onnxrt_sys")]
+#![doc(html_root_url = "https://furiosa-ai.github.io/onnxrt-sys/0.4.0/onnxrt_sys")]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
