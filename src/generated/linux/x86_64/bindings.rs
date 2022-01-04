@@ -171,7 +171,7 @@ pub const _STRING_H: u32 = 1;
 pub const _BITS_TYPES_LOCALE_T_H: u32 = 1;
 pub const _BITS_TYPES___LOCALE_T_H: u32 = 1;
 pub const _STRINGS_H: u32 = 1;
-pub const ORT_API_VERSION: u32 = 8;
+pub const ORT_API_VERSION: u32 = 9;
 pub type wchar_t = ::std::os::raw::c_int;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -2294,6 +2294,22 @@ pub enum ONNXType {
 }
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum OrtSparseFormat {
+    ORT_SPARSE_UNDEFINED = 0,
+    ORT_SPARSE_COO = 1,
+    ORT_SPARSE_CSRC = 2,
+    ORT_SPARSE_BLOCK_SPARSE = 4,
+}
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum OrtSparseIndicesFormat {
+    ORT_SPARSE_COO_INDICES = 0,
+    ORT_SPARSE_CSR_INNER_INDICES = 1,
+    ORT_SPARSE_CSR_OUTER_INDICES = 2,
+    ORT_SPARSE_BLOCK_SPARSE_INDICES = 3,
+}
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum OrtLoggingLevel {
     ORT_LOGGING_LEVEL_VERBOSE = 0,
     ORT_LOGGING_LEVEL_INFO = 1,
@@ -2407,17 +2423,26 @@ pub struct OrtArenaCfg {
 pub struct OrtPrepackedWeightsContainer {
     _unused: [u8; 0],
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct OrtTensorRTProviderOptionsV2 {
+    _unused: [u8; 0],
+}
 pub type OrtStatusPtr = *mut OrtStatus;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OrtAllocator {
+    #[doc = "< Must be initialized to ORT_API_VERSION"]
     pub version: u32,
+    #[doc = "< Returns a pointer to an allocated block of `size` bytes"]
     pub Alloc: ::std::option::Option<
         unsafe extern "C" fn(this_: *mut OrtAllocator, size: usize) -> *mut ::std::os::raw::c_void,
     >,
+    #[doc = "< Free a block of memory previously allocated with OrtAllocator::Alloc"]
     pub Free: ::std::option::Option<
         unsafe extern "C" fn(this_: *mut OrtAllocator, p: *mut ::std::os::raw::c_void),
     >,
+    #[doc = "< Return a pointer to an ::OrtMemoryInfo that describes this allocator"]
     pub Info: ::std::option::Option<
         unsafe extern "C" fn(this_: *const OrtAllocator) -> *const OrtMemoryInfo,
     >,
@@ -2532,13 +2557,37 @@ pub enum OrtCudnnConvAlgoSearch {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OrtCUDAProviderOptions {
+    #[doc = " \\brief CUDA device Id"]
+    #[doc = "   Defaults to 0."]
     pub device_id: ::std::os::raw::c_int,
+    #[doc = " \\brief CUDA Convolution algorithm search configuration."]
+    #[doc = "   See enum OrtCudnnConvAlgoSearch for more details."]
+    #[doc = "   Defaults to OrtCudnnConvAlgoSearchExhaustive."]
     pub cudnn_conv_algo_search: OrtCudnnConvAlgoSearch,
+    #[doc = " \\brief CUDA memory limit (To use all possible memory pass in maximum size_t)"]
+    #[doc = "   Defaults to SIZE_MAX."]
+    #[doc = "   \\note If a ::OrtArenaCfg has been applied, it will override this field"]
     pub gpu_mem_limit: usize,
+    #[doc = " \\brief Strategy used to grow the memory arena"]
+    #[doc = "   0 = kNextPowerOfTwo<br>"]
+    #[doc = "   1 = kSameAsRequested<br>"]
+    #[doc = "   Defaults to 0."]
+    #[doc = "   \\note If a ::OrtArenaCfg has been applied, it will override this field"]
     pub arena_extend_strategy: ::std::os::raw::c_int,
+    #[doc = " \\brief Flag indicating if copying needs to take place on the same stream as the compute stream in the CUDA EP"]
+    #[doc = "   0 = Use separate streams for copying and compute."]
+    #[doc = "   1 = Use the same stream for copying and compute."]
+    #[doc = "   Defaults to 1."]
+    #[doc = "   WARNING: Setting this to 0 may result in data races for some models."]
+    #[doc = "   Please see issue #4829 for more details."]
     pub do_copy_in_default_stream: ::std::os::raw::c_int,
+    #[doc = " \\brief Flag indicating if there is a user provided compute stream"]
+    #[doc = "   Defaults to 0."]
     pub has_user_compute_stream: ::std::os::raw::c_int,
+    #[doc = " \\brief User provided compute stream."]
+    #[doc = "   If provided, please set `has_user_compute_stream` to 1."]
     pub user_compute_stream: *mut ::std::os::raw::c_void,
+    #[doc = " \\brief CUDA memory arena configuration parameters"]
     pub default_memory_arena_cfg: *mut OrtArenaCfg,
 }
 #[test]
@@ -3453,7 +3502,7 @@ pub struct OrtApi {
     >,
     pub CastTypeInfoToTensorInfo: ::std::option::Option<
         unsafe extern "C" fn(
-            arg1: *const OrtTypeInfo,
+            type_info: *const OrtTypeInfo,
             out: *mut *const OrtTensorTypeAndShapeInfo,
         ) -> OrtStatusPtr,
     >,
@@ -3522,10 +3571,10 @@ pub struct OrtApi {
     >,
     pub CreateMemoryInfo: ::std::option::Option<
         unsafe extern "C" fn(
-            name1: *const ::std::os::raw::c_char,
+            name: *const ::std::os::raw::c_char,
             type_: OrtAllocatorType,
-            id1: ::std::os::raw::c_int,
-            mem_type1: OrtMemType,
+            id: ::std::os::raw::c_int,
+            mem_type: OrtMemType,
             out: *mut *mut OrtMemoryInfo,
         ) -> OrtStatusPtr,
     >,
@@ -4074,12 +4123,164 @@ pub struct OrtApi {
             out: *mut *mut OrtSession,
         ) -> OrtStatusPtr,
     >,
+    pub SessionOptionsAppendExecutionProvider_TensorRT_V2: ::std::option::Option<
+        unsafe extern "C" fn(
+            options: *mut OrtSessionOptions,
+            tensorrt_options: *const OrtTensorRTProviderOptionsV2,
+        ) -> OrtStatusPtr,
+    >,
+    pub CreateTensorRTProviderOptions: ::std::option::Option<
+        unsafe extern "C" fn(out: *mut *mut OrtTensorRTProviderOptionsV2) -> OrtStatusPtr,
+    >,
+    pub UpdateTensorRTProviderOptions: ::std::option::Option<
+        unsafe extern "C" fn(
+            tensorrt_options: *mut OrtTensorRTProviderOptionsV2,
+            provider_options_keys: *const *const ::std::os::raw::c_char,
+            provider_options_values: *const *const ::std::os::raw::c_char,
+            num_keys: usize,
+        ) -> OrtStatusPtr,
+    >,
+    pub GetTensorRTProviderOptionsAsString: ::std::option::Option<
+        unsafe extern "C" fn(
+            tensorrt_options: *const OrtTensorRTProviderOptionsV2,
+            allocator: *mut OrtAllocator,
+            ptr: *mut *mut ::std::os::raw::c_char,
+        ) -> OrtStatusPtr,
+    >,
+    pub ReleaseTensorRTProviderOptions:
+        ::std::option::Option<unsafe extern "C" fn(input: *mut OrtTensorRTProviderOptionsV2)>,
+    pub EnableOrtCustomOps: ::std::option::Option<
+        unsafe extern "C" fn(options: *mut OrtSessionOptions) -> OrtStatusPtr,
+    >,
+    pub RegisterAllocator: ::std::option::Option<
+        unsafe extern "C" fn(env: *mut OrtEnv, allocator: *mut OrtAllocator) -> OrtStatusPtr,
+    >,
+    pub UnregisterAllocator: ::std::option::Option<
+        unsafe extern "C" fn(env: *mut OrtEnv, mem_info: *const OrtMemoryInfo) -> OrtStatusPtr,
+    >,
+    pub IsSparseTensor: ::std::option::Option<
+        unsafe extern "C" fn(
+            value: *const OrtValue,
+            out: *mut ::std::os::raw::c_int,
+        ) -> OrtStatusPtr,
+    >,
+    pub CreateSparseTensorAsOrtValue: ::std::option::Option<
+        unsafe extern "C" fn(
+            allocator: *mut OrtAllocator,
+            dense_shape: *const i64,
+            dense_shape_len: usize,
+            type_: ONNXTensorElementDataType,
+            out: *mut *mut OrtValue,
+        ) -> OrtStatusPtr,
+    >,
+    pub FillSparseTensorCoo: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *mut OrtValue,
+            data_mem_info: *const OrtMemoryInfo,
+            values_shape: *const i64,
+            values_shape_len: usize,
+            values: *const ::std::os::raw::c_void,
+            indices_data: *const i64,
+            indices_num: usize,
+        ) -> OrtStatusPtr,
+    >,
+    pub FillSparseTensorCsr: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *mut OrtValue,
+            data_mem_info: *const OrtMemoryInfo,
+            values_shape: *const i64,
+            values_shape_len: usize,
+            values: *const ::std::os::raw::c_void,
+            inner_indices_data: *const i64,
+            inner_indices_num: usize,
+            outer_indices_data: *const i64,
+            outer_indices_num: usize,
+        ) -> OrtStatusPtr,
+    >,
+    pub FillSparseTensorBlockSparse: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *mut OrtValue,
+            data_mem_info: *const OrtMemoryInfo,
+            values_shape: *const i64,
+            values_shape_len: usize,
+            values: *const ::std::os::raw::c_void,
+            indices_shape_data: *const i64,
+            indices_shape_len: usize,
+            indices_data: *const i32,
+        ) -> OrtStatusPtr,
+    >,
+    pub CreateSparseTensorWithValuesAsOrtValue: ::std::option::Option<
+        unsafe extern "C" fn(
+            info: *const OrtMemoryInfo,
+            p_data: *mut ::std::os::raw::c_void,
+            dense_shape: *const i64,
+            dense_shape_len: usize,
+            values_shape: *const i64,
+            values_shape_len: usize,
+            type_: ONNXTensorElementDataType,
+            out: *mut *mut OrtValue,
+        ) -> OrtStatusPtr,
+    >,
+    pub UseCooIndices: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *mut OrtValue,
+            indices_data: *mut i64,
+            indices_num: usize,
+        ) -> OrtStatusPtr,
+    >,
+    pub UseCsrIndices: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *mut OrtValue,
+            inner_data: *mut i64,
+            inner_num: usize,
+            outer_data: *mut i64,
+            outer_num: usize,
+        ) -> OrtStatusPtr,
+    >,
+    pub UseBlockSparseIndices: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *mut OrtValue,
+            indices_shape: *const i64,
+            indices_shape_len: usize,
+            indices_data: *mut i32,
+        ) -> OrtStatusPtr,
+    >,
+    pub GetSparseTensorFormat: ::std::option::Option<
+        unsafe extern "C" fn(ort_value: *const OrtValue, out: *mut OrtSparseFormat) -> OrtStatusPtr,
+    >,
+    pub GetSparseTensorValuesTypeAndShape: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *const OrtValue,
+            out: *mut *mut OrtTensorTypeAndShapeInfo,
+        ) -> OrtStatusPtr,
+    >,
+    pub GetSparseTensorValues: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *const OrtValue,
+            out: *mut *const ::std::os::raw::c_void,
+        ) -> OrtStatusPtr,
+    >,
+    pub GetSparseTensorIndicesTypeShape: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *const OrtValue,
+            indices_format: OrtSparseIndicesFormat,
+            out: *mut *mut OrtTensorTypeAndShapeInfo,
+        ) -> OrtStatusPtr,
+    >,
+    pub GetSparseTensorIndices: ::std::option::Option<
+        unsafe extern "C" fn(
+            ort_value: *const OrtValue,
+            indices_format: OrtSparseIndicesFormat,
+            num_indices: *mut usize,
+            indices: *mut *const ::std::os::raw::c_void,
+        ) -> OrtStatusPtr,
+    >,
 }
 #[test]
 fn bindgen_test_layout_OrtApi() {
     assert_eq!(
         ::std::mem::size_of::<OrtApi>(),
-        1360usize,
+        1536usize,
         concat!("Size of: ", stringify!(OrtApi))
     );
     assert_eq!(
@@ -5340,6 +5541,190 @@ fn bindgen_test_layout_OrtApi() {
             stringify!(CreateSessionFromArrayWithPrepackedWeightsContainer)
         )
     );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).SessionOptionsAppendExecutionProvider_TensorRT_V2
+                as *const _ as usize
+        },
+        1360usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(SessionOptionsAppendExecutionProvider_TensorRT_V2)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).CreateTensorRTProviderOptions as *const _ as usize
+        },
+        1368usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(CreateTensorRTProviderOptions)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).UpdateTensorRTProviderOptions as *const _ as usize
+        },
+        1376usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(UpdateTensorRTProviderOptions)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).GetTensorRTProviderOptionsAsString as *const _
+                as usize
+        },
+        1384usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(GetTensorRTProviderOptionsAsString)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).ReleaseTensorRTProviderOptions as *const _ as usize
+        },
+        1392usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(ReleaseTensorRTProviderOptions)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).EnableOrtCustomOps as *const _ as usize },
+        1400usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(EnableOrtCustomOps))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).RegisterAllocator as *const _ as usize },
+        1408usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(RegisterAllocator))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).UnregisterAllocator as *const _ as usize },
+        1416usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(UnregisterAllocator))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).IsSparseTensor as *const _ as usize },
+        1424usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(IsSparseTensor))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).CreateSparseTensorAsOrtValue as *const _ as usize
+        },
+        1432usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(CreateSparseTensorAsOrtValue)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).FillSparseTensorCoo as *const _ as usize },
+        1440usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(FillSparseTensorCoo))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).FillSparseTensorCsr as *const _ as usize },
+        1448usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(FillSparseTensorCsr))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).FillSparseTensorBlockSparse as *const _ as usize
+        },
+        1456usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(FillSparseTensorBlockSparse)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).CreateSparseTensorWithValuesAsOrtValue as *const _
+                as usize
+        },
+        1464usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(CreateSparseTensorWithValuesAsOrtValue)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).UseCooIndices as *const _ as usize },
+        1472usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(UseCooIndices))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).UseCsrIndices as *const _ as usize },
+        1480usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(UseCsrIndices))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).UseBlockSparseIndices as *const _ as usize },
+        1488usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(UseBlockSparseIndices))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).GetSparseTensorFormat as *const _ as usize },
+        1496usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(GetSparseTensorFormat))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).GetSparseTensorValuesTypeAndShape as *const _
+                as usize
+        },
+        1504usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(GetSparseTensorValuesTypeAndShape)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).GetSparseTensorValues as *const _ as usize },
+        1512usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(GetSparseTensorValues))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<OrtApi>())).GetSparseTensorIndicesTypeShape as *const _ as usize
+        },
+        1520usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(OrtApi),
+            "::",
+            stringify!(GetSparseTensorIndicesTypeShape)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<OrtApi>())).GetSparseTensorIndices as *const _ as usize },
+        1528usize,
+        concat!("Offset of field: ", stringify!(OrtApi), "::", stringify!(GetSparseTensorIndices))
+    );
 }
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -5488,6 +5873,12 @@ fn bindgen_test_layout_OrtCustomOp() {
             stringify!(GetOutputCharacteristic)
         )
     );
+}
+extern "C" {
+    pub fn OrtSessionOptionsAppendExecutionProvider_CUDA(
+        options: *mut OrtSessionOptions,
+        device_id: ::std::os::raw::c_int,
+    ) -> OrtStatusPtr;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
