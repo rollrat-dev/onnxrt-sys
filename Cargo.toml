@@ -22,7 +22,7 @@ ureq = "2.4.0"
 
 [target.'cfg(unix)'.build-dependencies]
 flate2 = "1.0.22"
-tar = "0.4.37"
+tar = "0.4.38"
 
 [target.'cfg(windows)'.build-dependencies]
 zip = "0.5.13"
