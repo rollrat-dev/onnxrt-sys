@@ -1,7 +1,7 @@
 # OnnxRt-sys
 
 [![build status](https://github.com/furiosa-ai/onnxrt-sys/actions/workflows/build.yml/badge.svg)](https://github.com/furiosa-ai/onnxrt-sys/actions/workflows/build.yml?query=branch%3Amain)
-[![docs](https://img.shields.io/badge/docs-0.5.0-blue.svg)](https://furiosa-ai.github.io/onnxrt-sys/0.5.0/onnxrt_sys/)
+[![docs](https://img.shields.io/badge/docs-0.6.0-blue.svg)](https://furiosa-ai.github.io/onnxrt-sys/0.6.0/onnxrt_sys/)
 
 OnnxRt-sys provides low-level Rust bindings to [the C API] for Microsoft's
 [ONNX Runtime] v1.9.0.
@@ -21,7 +21,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-onnxrt-sys = { git = "https://github.com/furiosa-ai/onnxrt-sys", tag = "0.5.0" }
+onnxrt-sys = { git = "https://github.com/furiosa-ai/onnxrt-sys", tag = "0.6.0" }
 ```
 
 ## Example

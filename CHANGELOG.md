@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2022-01-13
+
+### Added
+
+- Can specify the separate directories of ONNX Runtime header files and library
+  by setting the `ORT_INCLUDE_DIR` and `ORT_LIB_DIR` environment variables when
+  `ORT_STRATEGY=system`.
+
+### Removed
+
+- The `ORT_LIB_LOCATION` environment variable, which is superseded by
+  `ORT_INCLUDE_DIR` and `ORT_LIB_DIR`.
+
 ## [0.5.0] - 2022-01-04
 
 ### Added
@@ -37,7 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support ONNX Runtime v1.7.
 
-[Unreleased]: https://github.com/furiosa-ai/onnxrt-sys/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/furiosa-ai/onnxrt-sys/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.6.0
 [0.5.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.5.0
 [0.4.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.4.0
 [0.3.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.3.0
