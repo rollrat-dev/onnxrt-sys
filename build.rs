@@ -21,13 +21,16 @@ const ORT_RELEASE_BASE_URL: &str = "https://github.com/microsoft/onnxruntime/rel
 /// Environment variable selecting which strategy to use for finding the library
 /// Possibilities:
 /// * "download": Download a pre-built library from upstream. This is the default if `ORT_STRATEGY` is not set.
-/// * "system": Use installed library. Use `ORT_LIB_LOCATION` to point to proper location.
+/// * "system": Use installed library. Use `ORT_LIB_DIR` to point to proper location.
 /// * "compile": Download source and compile (TODO).
 const ORT_ENV_STRATEGY: &str = "ORT_STRATEGY";
 
-/// Name of environment variable that, if present, contains the location of a pre-built library.
-/// Only used if `ORT_STRATEGY=system`.
-const ORT_ENV_SYSTEM_LIB_LOCATION: &str = "ORT_LIB_LOCATION";
+/// Name of environment variable that, if present, contains the location of the ONNX Runtime header
+/// files. Only used if `ORT_STRATEGY=system`.
+const ORT_ENV_SYSTEM_INCLUDE_DIR: &str = "ORT_INCLUDE_DIR";
+/// Name of environment variable that, if present, contains the location of the ONNX Runtime
+/// library.  Only used if `ORT_STRATEGY=system`.
+const ORT_ENV_SYSTEM_LIB_DIR: &str = "ORT_LIB_DIR";
 /// Name of environment variable that, if present, controls wether to use CUDA or not.
 const ORT_ENV_GPU: &str = "ORT_USE_CUDA";
 
@@ -35,10 +38,7 @@ const ORT_ENV_GPU: &str = "ORT_USE_CUDA";
 const ORT_PREBUILT_EXTRACT_DIR: &str = "onnxruntime";
 
 fn main() {
-    let libort_install_dir = prepare_libort_dir();
-
-    let include_dir = libort_install_dir.join("include");
-    let lib_dir = libort_install_dir.join("lib");
+    let (include_dir, lib_dir) = prepare_libort_dir();
 
     println!("Include directory: {:?}", include_dir);
     println!("Lib directory: {:?}", lib_dir);
@@ -49,7 +49,8 @@ fn main() {
 
     println!("cargo:rerun-if-env-changed={}", ORT_ENV_STRATEGY);
     println!("cargo:rerun-if-env-changed={}", ORT_ENV_GPU);
-    println!("cargo:rerun-if-env-changed={}", ORT_ENV_SYSTEM_LIB_LOCATION);
+    println!("cargo:rerun-if-env-changed={}", ORT_ENV_SYSTEM_INCLUDE_DIR);
+    println!("cargo:rerun-if-env-changed={}", ORT_ENV_SYSTEM_LIB_DIR);
 
     generate_bindings(&include_dir);
 }
@@ -318,8 +319,13 @@ impl OnnxPrebuiltArchive for Triplet {
             )),
             _ => {
                 panic!(
-                    "Unsupported prebuilt triplet: {:?}, {:?}, {:?}. Please use {}=system and {}=/path/to/onnxruntime",
-                    self.os, self.arch, self.accelerator, ORT_ENV_STRATEGY, ORT_ENV_SYSTEM_LIB_LOCATION
+                    "Unsupported prebuilt triplet: {:?}, {:?}, {:?}. Please use {}=system, {}=/path/to/onnxruntime_include_dir, and {}=/path/to/onnxruntime_lib_dir",
+                    self.os,
+                    self.arch,
+                    self.accelerator,
+                    ORT_ENV_STRATEGY,
+                    ORT_ENV_SYSTEM_INCLUDE_DIR,
+                    ORT_ENV_SYSTEM_LIB_DIR,
                 );
             }
         }
@@ -372,20 +378,37 @@ fn prepare_libort_dir_prebuilt() -> PathBuf {
     extract_dir.join(prebuilt_archive.file_stem().unwrap())
 }
 
-fn prepare_libort_dir() -> PathBuf {
+fn prepare_libort_dir() -> (PathBuf, PathBuf) {
     let strategy = env::var(ORT_ENV_STRATEGY);
     println!("strategy: {:?}", strategy.as_ref().map(String::as_str).unwrap_or_else(|_| "unknown"));
     match strategy.as_ref().map(String::as_str) {
-        Ok("download") | Err(_) => prepare_libort_dir_prebuilt(),
-        Ok("system") => PathBuf::from(match env::var(ORT_ENV_SYSTEM_LIB_LOCATION) {
-            Ok(p) => p,
-            Err(e) => {
-                panic!(
-                    "Could not get value of environment variable {:?}: {:?}",
-                    ORT_ENV_SYSTEM_LIB_LOCATION, e
-                );
-            }
-        }),
+        Ok("download") | Err(_) => {
+            let libort_install_dir = prepare_libort_dir_prebuilt();
+            let include_dir = libort_install_dir.join("include");
+            let lib_dir = libort_install_dir.join("lib");
+            (include_dir, lib_dir)
+        }
+        Ok("system") => {
+            let include_dir = match env::var(ORT_ENV_SYSTEM_INCLUDE_DIR) {
+                Ok(p) => PathBuf::from(p),
+                Err(e) => {
+                    panic!(
+                        "Could not get value of environment variable {:?}: {:?}",
+                        ORT_ENV_SYSTEM_INCLUDE_DIR, e
+                    );
+                }
+            };
+            let lib_dir = match env::var(ORT_ENV_SYSTEM_LIB_DIR) {
+                Ok(p) => PathBuf::from(p),
+                Err(e) => {
+                    panic!(
+                        "Could not get value of environment variable {:?}: {:?}",
+                        ORT_ENV_SYSTEM_LIB_DIR, e
+                    );
+                }
+            };
+            (include_dir, lib_dir)
+        }
         Ok("compile") => unimplemented!(),
         _ => panic!("Unknown value for {:?}", ORT_ENV_STRATEGY),
     }
