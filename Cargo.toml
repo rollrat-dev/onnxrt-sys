@@ -25,4 +25,4 @@ flate2 = "1.0.22"
 tar = "0.4.38"
 
 [target.'cfg(windows)'.build-dependencies]
-zip = "0.5.13"
+zip = "0.6.0"
