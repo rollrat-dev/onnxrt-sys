@@ -13,7 +13,7 @@ use std::{
 /// WARNING: If version is changed, bindings for all platforms will have to be re-generated.
 ///          To do so, run this:
 ///              cargo build --features generate-bindings
-const ORT_VERSION: &str = "1.9.0";
+const ORT_VERSION: &str = "1.10.0";
 
 /// Base Url from which to download pre-built releases/
 const ORT_RELEASE_BASE_URL: &str = "https://github.com/microsoft/onnxruntime/releases/download";
@@ -287,31 +287,32 @@ struct Triplet {
 impl OnnxPrebuiltArchive for Triplet {
     fn as_onnx_str(&self) -> Cow<str> {
         match (&self.os, &self.arch, &self.accelerator) {
-            // onnxruntime-win-x86-1.8.1.zip
-            // onnxruntime-win-x64-1.8.1.zip
-            // onnxruntime-win-arm-1.8.1.zip
-            // onnxruntime-win-arm64-1.8.1.zip
-            // onnxruntime-linux-x64-1.8.1.tgz
-            // onnxruntime-osx-x64-1.8.1.tgz
+            // onnxruntime-win-x86-1.10.0.zip
+            // onnxruntime-win-x64-1.10.0.zip
+            // onnxruntime-win-arm-1.10.0.zip
+            // onnxruntime-win-arm64-1.10.0.zip
+            // onnxruntime-linux-x64-1.10.0.tgz
+            // onnxruntime-osx-arm64-1.10.0.tgz
             (Os::Windows, Architecture::X86, Accelerator::None)
             | (Os::Windows, Architecture::X86_64, Accelerator::None)
             | (Os::Windows, Architecture::Arm, Accelerator::None)
             | (Os::Windows, Architecture::Arm64, Accelerator::None)
             | (Os::Linux, Architecture::X86_64, Accelerator::None)
-            | (Os::MacOs, Architecture::X86_64, Accelerator::None) => {
+            | (Os::MacOs, Architecture::Arm64, Accelerator::None) => {
                 Cow::from(format!("{}-{}", self.os.as_onnx_str(), self.arch.as_onnx_str()))
             }
-            // onnxruntime-win-gpu-x64-1.8.1.zip
-            // Note how this one is inverted from the linux one next
-            (Os::Windows, Architecture::X86_64, Accelerator::Gpu) => Cow::from(format!(
-                "{}-{}-{}",
-                self.os.as_onnx_str(),
-                self.accelerator.as_onnx_str(),
-                self.arch.as_onnx_str(),
-            )),
-            // onnxruntime-linux-x64-gpu-1.8.1.tgz
-            // Note how this one is inverted from the windows one above
-            (Os::Linux, Architecture::X86_64, Accelerator::Gpu) => Cow::from(format!(
+            // onnxruntime-linux-aarch64-1.0.0.tgz
+            (Os::Linux, Architecture::Arm64, Accelerator::None) => {
+                Cow::from(format!("{}-{}", self.os.as_onnx_str(), "aarch64"))
+            }
+            // onnxruntime-osx-x86_64-1.10.0.tgz
+            (Os::MacOs, Architecture::X86_64, Accelerator::None) => {
+                Cow::from(format!("{}-{}", self.os.as_onnx_str(), "x86_64"))
+            }
+            // onnxruntime-win-x64-gpu-1.10.0.zip
+            // onnxruntime-linux-x64-gpu-1.10.0.tgz
+            (Os::Windows, Architecture::X86_64, Accelerator::Gpu)
+            | (Os::Linux, Architecture::X86_64, Accelerator::Gpu) => Cow::from(format!(
                 "{}-{}-{}",
                 self.os.as_onnx_str(),
                 self.arch.as_onnx_str(),
