@@ -13,7 +13,7 @@ use std::{
 /// WARNING: If version is changed, bindings for all platforms will have to be re-generated.
 ///          To do so, run this:
 ///              cargo build --features generate-bindings
-const ORT_VERSION: &str = "1.10.0";
+const ORT_VERSION: &str = "1.11.0";
 
 /// Base Url from which to download pre-built releases/
 const ORT_RELEASE_BASE_URL: &str = "https://github.com/microsoft/onnxruntime/releases/download";
@@ -301,7 +301,7 @@ impl OnnxPrebuiltArchive for Triplet {
             | (Os::MacOs, Architecture::Arm64, Accelerator::None) => {
                 Cow::from(format!("{}-{}", self.os.as_onnx_str(), self.arch.as_onnx_str()))
             }
-            // onnxruntime-linux-aarch64-1.0.0.tgz
+            // onnxruntime-linux-aarch64-1.10.0.tgz
             (Os::Linux, Architecture::Arm64, Accelerator::None) => {
                 Cow::from(format!("{}-{}", self.os.as_onnx_str(), "aarch64"))
             }
