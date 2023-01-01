@@ -179,8 +179,8 @@ fn main() {
         };
         CheckStatus(g_ort, status).unwrap();
 
-        for j in 0..num_dims {
-            println!("Input {} : dim {}={}", i, j, input_node_dims[j]);
+        for (j, input_node_dim) in input_node_dims.iter().enumerate().take(num_dims) {
+            println!("Input {} : dim {}={}", i, j, input_node_dim);
         }
 
         unsafe { g_ort.as_ref().unwrap().ReleaseTypeInfo.unwrap()(typeinfo_ptr) };
