@@ -101,7 +101,7 @@ fn main() {
     };
     CheckStatus(g_ort, status).unwrap();
     assert_ne!(num_input_nodes, 0);
-    println!("Number of inputs = {:?}", num_input_nodes);
+    println!("Number of inputs = {num_input_nodes:?}");
     let mut input_node_names: Vec<&str> = Vec::new();
     let mut input_node_dims: Vec<i64> = Vec::new(); // simplify... this model has only 1 input node {1, 3, 224, 224}.
                                                     // Otherwise need vector<vector<>>
@@ -125,7 +125,7 @@ fn main() {
         //          We cannot let Rust free that string, the C side must free the string.
         //          We thus convert the pointer to a string slice (&str).
         let input_name = char_p_to_str(input_name).unwrap();
-        println!("Input {} : name={}", i, input_name);
+        println!("Input {i} : name={input_name}");
         input_node_names.push(input_name);
 
         // print input node types
@@ -168,7 +168,7 @@ fn main() {
         CheckStatus(g_ort, status).unwrap();
         assert_ne!(num_dims, 0);
 
-        println!("Input {} : num_dims={}", i, num_dims);
+        println!("Input {i} : num_dims={num_dims}");
         input_node_dims.resize_with(num_dims, Default::default);
         let status = unsafe {
             g_ort.as_ref().unwrap().GetDimensions.unwrap()(
@@ -180,7 +180,7 @@ fn main() {
         CheckStatus(g_ort, status).unwrap();
 
         for (j, input_node_dim) in input_node_dims.iter().enumerate().take(num_dims) {
-            println!("Input {} : dim {}={}", i, j, input_node_dim);
+            println!("Input {i} : dim {j}={input_node_dim}");
         }
 
         unsafe { g_ort.as_ref().unwrap().ReleaseTypeInfo.unwrap()(typeinfo_ptr) };
@@ -316,7 +316,7 @@ fn main() {
     //       but let C de-allocate instead.
     let floatarr_vec: Vec<f32> = unsafe { Vec::from_raw_parts(floatarr, 5, 5) };
     for (i, float) in floatarr_vec.iter().enumerate() {
-        println!("Score for class [{}] =  {}", i, float);
+        println!("Score for class [{i}] =  {float}");
     }
     std::mem::forget(floatarr_vec);
 

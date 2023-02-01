@@ -40,17 +40,17 @@ const ORT_PREBUILT_EXTRACT_DIR: &str = "onnxruntime";
 fn main() {
     let (include_dir, lib_dir) = prepare_libort_dir();
 
-    println!("Include directory: {:?}", include_dir);
-    println!("Lib directory: {:?}", lib_dir);
+    println!("Include directory: {include_dir:?}");
+    println!("Lib directory: {lib_dir:?}");
 
     // Tell cargo to tell rustc to link onnxruntime shared library.
     println!("cargo:rustc-link-lib=onnxruntime");
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    println!("cargo:rerun-if-env-changed={}", ORT_ENV_STRATEGY);
-    println!("cargo:rerun-if-env-changed={}", ORT_ENV_GPU);
-    println!("cargo:rerun-if-env-changed={}", ORT_ENV_SYSTEM_INCLUDE_DIR);
-    println!("cargo:rerun-if-env-changed={}", ORT_ENV_SYSTEM_LIB_DIR);
+    println!("cargo:rerun-if-env-changed={ORT_ENV_STRATEGY}");
+    println!("cargo:rerun-if-env-changed={ORT_ENV_GPU}");
+    println!("cargo:rerun-if-env-changed={ORT_ENV_SYSTEM_INCLUDE_DIR}");
+    println!("cargo:rerun-if-env-changed={ORT_ENV_SYSTEM_LIB_DIR}");
 
     generate_bindings(&include_dir);
 }
@@ -101,7 +101,7 @@ fn generate_bindings(include_dir: &Path) {
         .join(env::var("CARGO_CFG_TARGET_OS").unwrap())
         .join(env::var("CARGO_CFG_TARGET_ARCH").unwrap())
         .join("bindings.rs");
-    println!("cargo:rerun-if-changed={:?}", generated_file);
+    println!("cargo:rerun-if-changed={generated_file:?}");
     bindings.write_to_file(&generated_file).expect("Couldn't write bindings!");
 }
 
@@ -112,7 +112,7 @@ where
     let resp = ureq::get(source_url)
         .timeout(std::time::Duration::from_secs(300))
         .call()
-        .unwrap_or_else(|err| panic!("ERROR: Failed to download {}: {:?}", source_url, err));
+        .unwrap_or_else(|err| panic!("ERROR: Failed to download {source_url}: {err:?}"));
 
     let len = resp.header("Content-Length").and_then(|s| s.parse::<usize>().ok()).unwrap();
     let mut reader = resp.into_reader();
@@ -194,7 +194,7 @@ impl FromStr for Architecture {
             "x86_64" => Ok(Architecture::X86_64),
             "arm" => Ok(Architecture::Arm),
             "aarch64" => Ok(Architecture::Arm64),
-            _ => Err(format!("Unsupported architecture: {}", s)),
+            _ => Err(format!("Unsupported architecture: {s}")),
         }
     }
 }
@@ -236,7 +236,7 @@ impl FromStr for Os {
             "windows" => Ok(Os::Windows),
             "macos" => Ok(Os::MacOs),
             "linux" => Ok(Os::Linux),
-            _ => Err(format!("Unsupported os: {}", s)),
+            _ => Err(format!("Unsupported os: {s}")),
         }
     }
 }
@@ -349,7 +349,7 @@ fn prebuilt_archive_url() -> (PathBuf, String) {
         ORT_VERSION,
         triplet.os.archive_extension()
     );
-    let prebuilt_url = format!("{}/v{}/{}", ORT_RELEASE_BASE_URL, ORT_VERSION, prebuilt_archive);
+    let prebuilt_url = format!("{ORT_RELEASE_BASE_URL}/v{ORT_VERSION}/{prebuilt_archive}");
 
     (PathBuf::from(prebuilt_archive), prebuilt_url)
 }
@@ -362,7 +362,7 @@ fn prepare_libort_dir_prebuilt() -> PathBuf {
     let downloaded_file = out_dir.join(&prebuilt_archive);
 
     if !downloaded_file.exists() {
-        println!("Creating directory {:?}", out_dir);
+        println!("Creating directory {out_dir:?}");
         fs::create_dir_all(&out_dir).unwrap();
 
         println!("Downloading {} into {}", prebuilt_url, downloaded_file.display());
@@ -391,24 +391,18 @@ fn prepare_libort_dir() -> (PathBuf, PathBuf) {
             let include_dir = match env::var(ORT_ENV_SYSTEM_INCLUDE_DIR) {
                 Ok(p) => PathBuf::from(p),
                 Err(e) => {
-                    panic!(
-                        "Could not get value of environment variable {:?}: {:?}",
-                        ORT_ENV_SYSTEM_INCLUDE_DIR, e
-                    );
+                    panic!("Could not get value of environment variable {ORT_ENV_SYSTEM_INCLUDE_DIR:?}: {e:?}");
                 }
             };
             let lib_dir = match env::var(ORT_ENV_SYSTEM_LIB_DIR) {
                 Ok(p) => PathBuf::from(p),
                 Err(e) => {
-                    panic!(
-                        "Could not get value of environment variable {:?}: {:?}",
-                        ORT_ENV_SYSTEM_LIB_DIR, e
-                    );
+                    panic!("Could not get value of environment variable {ORT_ENV_SYSTEM_LIB_DIR:?}: {e:?}");
                 }
             };
             (include_dir, lib_dir)
         }
         Ok("compile") => unimplemented!(),
-        _ => panic!("Unknown value for {:?}", ORT_ENV_STRATEGY),
+        _ => panic!("Unknown value for {ORT_ENV_STRATEGY:?}"),
     }
 }
