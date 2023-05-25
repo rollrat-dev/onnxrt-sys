@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove pre-generated bindings for macOS x86_64
+
 ## [0.15.0] - 2023-03-07
 
 ### Added
