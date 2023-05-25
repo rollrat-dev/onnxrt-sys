@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2023-05-25
+
+### Added
+
+- Support ONNX Runtime v1.15.0.
+
 ### Removed
 
 - Remove pre-generated bindings for macOS x86_64
@@ -114,7 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support ONNX Runtime v1.7.
 
-[Unreleased]: https://github.com/furiosa-ai/onnxrt-sys/compare/0.15.0...HEAD
+[Unreleased]: https://github.com/furiosa-ai/onnxrt-sys/compare/0.16.0...HEAD
+[0.16.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.16.0
 [0.15.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.15.0
 [0.14.0]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.14.0
 [0.13.1]: https://github.com/furiosa-ai/onnxrt-sys/releases/tag/0.13.1
