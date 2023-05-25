@@ -87,7 +87,7 @@ fn generate_bindings(include_dir: &Path) {
         // Set `size_t` to be translated to `usize` for win32 compatibility.
         .size_t_is_usize(true)
         // Format using rustfmt
-        .rustfmt_bindings(true)
+        .formatter(bindgen::Formatter::Rustfmt)
         .rustified_enum(".*")
         // Finish the builder and generate the bindings.
         .generate()
