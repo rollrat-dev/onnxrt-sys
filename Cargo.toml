@@ -18,7 +18,7 @@ generate-bindings = ["bindgen"]
 
 [build-dependencies]
 bindgen = { version = "0.65.1", optional = true }
-ureq = "2.6.2"
+ureq = "2.7.0"
 
 [target.'cfg(unix)'.build-dependencies]
 flate2 = "1.0.26"
